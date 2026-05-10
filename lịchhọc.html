@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Học Tuần - Nhập & Sắp Xếp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://phunugioi.com/wp-content/uploads/2020/03/hinh-nen-mau-den-cho-may-tinh-820x461.jpg');
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-shuffle {
+            background: #28a745;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-shuffle:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-auto-arrange {
+            background: #17a2b8;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-auto-arrange:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.4);
+        }
+
+        .btn-reset {
+            background: #ff6b6b;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-reset:hover {
+            background: #ee5a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .subjects-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .subject-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .subject-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+
+        .subject-item.dragging {
+            opacity: 0.5;
+            background: #e9ecef;
+        }
+
+        .subject-item.drag-over {
+            border-color: #667eea;
+            border-style: dashed;
+            background: #e7f3ff;
+        }
+
+        .subject-item:active {
+            cursor: grabbing;
+        }
+
+        .subject-name {
+            color: #333;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .btn-remove {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove:hover {
+            background: #ee5a52;
+        }
+
+        .schedule-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .day-schedule {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .day-subjects {
+            list-style: none;
+            flex: 1;
+            min-height: 200px;
+        }
+
+        .day-subject-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .day-subject-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .day-subject-item.dragging {
+            opacity: 0.5;
+        }
+
+        .day-subject-item.drag-over {
+            border-color: #667eea;
+            border-style: dashed;
+            background: #e7f3ff;
+        }
+
+        .checkbox-item {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .day-subject-name {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .day-subject-name.completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .btn-remove-day {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove-day:hover {
+            background: #ee5a52;
+        }
+
+        .empty-message {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .stats {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .schedule-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Lịch Học Tuần</h1>
+            <p>Nhập môn học, tự động sắp xếp, hoặc kéo-thả để sắp xếp theo ý bạn</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Phần nhập liệu -->
+            <div class="section">
+                <h2 class="section-title">📝 Nhập Môn Học</h2>
+                
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="subjectInput" 
+                        placeholder="Nhập tên môn học..."
+                        onkeypress="handleKeyPress(event)"
+                    >
+                    <button class="btn btn-add" onclick="addSubject()">Thêm</button>
+                </div>
+
+                <div class="subjects-list" id="subjectsList"></div>
+
+                <div class="stats" id="statsInput">
+                    Tổng: <strong id="totalSubjects">0</strong> môn
+                </div>
+
+                <button class="btn btn-auto-arrange" onclick="autoArrangeSchedule()">
+                    🔀 Tự Động Sắp Xếp Tuần
+                </button>
+
+                <button class="btn btn-shuffle" onclick="shuffleSubjects()">
+                    🔀 Xáo Trộn Lại
+                </button>
+
+                <button class="btn btn-reset" onclick="resetAll()">
+                    ↺ Xóa Tất Cả
+                </button>
+            </div>
+
+            <!-- Phần lịch học -->
+            <div class="section">
+                <h2 class="section-title">📅 Lịch Học Tuần</h2>
+                <div class="schedule-container" id="scheduleContainer"></div>
+                <div class="stats" style="margin-top: 15px;">
+                    Hoàn thành: <strong id="completedCount">0</strong> / <strong id="totalSchedule">0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const days = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu'];
+        let subjects = [];
+        let schedule = {};
+        let completed = {};
+        let draggedElement = null;
+
+        // Khởi tạo schedule
+        function initSchedule() {
+            schedule = {};
+            days.forEach(day => {
+                schedule[day] = [];
+            });
+        }
+
+        // Tải dữ liệu từ localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('scheduleData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                subjects = data.subjects || [];
+                schedule = data.schedule || {};
+                completed = data.completed || {};
+            } else {
+                initSchedule();
+            }
+        }
+
+        // Lưu dữ liệu vào localStorage
+        function saveToStorage() {
+            localStorage.setItem('scheduleData', JSON.stringify({
+                subjects,
+                schedule,
+                completed
+            }));
+        }
+
+        // Thêm môn học
+        function addSubject() {
+            const input = document.getElementById('subjectInput');
+            const value = input.value.trim();
+
+            if (!value) {
+                showNotification('⚠️ Vui lòng nhập tên môn học!');
+                return;
+            }
+
+            if (subjects.includes(value)) {
+                showNotification('⚠️ Môn học này đã tồn tại!');
+                return;
+            }
+
+            subjects.push(value);
+            input.value = '';
+            saveToStorage();
+            renderSubjects();
+            showNotification('✓ Thêm môn học thành công!');
+        }
+
+        // Xóa môn học
+        function removeSubject(index) {
+            subjects.splice(index, 1);
+            // Xóa môn học khỏi schedule
+            for (const day in schedule) {
+                schedule[day] = schedule[day].filter((_, i) => i !== index);
+            }
+            saveToStorage();
+            renderSubjects();
+            renderSchedule();
+        }
+
+        // Hiển thị danh sách môn học
+        function renderSubjects() {
+            const list = document.getElementById('subjectsList');
+            list.innerHTML = '';
+
+            if (subjects.length === 0) {
+                list.innerHTML = '<div class="empty-message">Chưa có môn học nào. Hãy thêm môn học!</div>';
+                document.getElementById('totalSubjects').textContent = '0';
+                return;
+            }
+
+            subjects.forEach((subject, index) => {
+                const li = document.createElement('li');
+                li.className = 'subject-item';
+                li.draggable = true;
+                li.innerHTML = `
+                    <span class="subject-name">${subject}</span>
+                    <button class="btn-remove" onclick="removeSubject(${index})">Xóa</button>
+                `;
+
+                li.addEventListener('dragstart', (e) => {
+                    draggedElement = { type: 'subject', index, data: subject };
+                    li.classList.add('dragging');
+                });
+
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('dragging');
+                });
+
+                list.appendChild(li);
+            });
+
+            document.getElementById('totalSubjects').textContent = subjects.length;
+        }
+
+        // Tự động sắp xếp tuần
+        function autoArrangeSchedule() {
+            if (subjects.length === 0) {
+                showNotification('⚠️ Vui lòng thêm môn học trước!');
+                return;
+            }
+
+            initSchedule();
+            completed = {};
+            const shuffled = [...subjects].sort(() => Math.random() - 0.5);
+
+            let subjectIndex = 0;
+            days.forEach(day => {
+                const subjectsPerDay = Math.ceil(shuffled.length / days.length);
+                for (let i = 0; i < subjectsPerDay && subjectIndex < shuffled.length; i++) {
+                    schedule[day].push(shuffled[subjectIndex++]);
+                }
+            });
+
+            saveToStorage();
+            renderSchedule();
+            showNotification('✓ Đã tự động sắp xếp lịch học!');
+        }
+
+        // Xáo trộn lại
+        function shuffleSubjects() {
+            if (Object.values(schedule).flat().length === 0) {
+                showNotification('⚠️ Hãy tự động sắp xếp trước!');
+                return;
+            }
+
+            const allSubjects = Object.values(schedule).flat();
+            const shuffled = allSubjects.sort(() => Math.random() - 0.5);
+
+            initSchedule();
+            completed = {};
+
+            let index = 0;
+            days.forEach(day => {
+                const subjectsPerDay = Math.ceil(shuffled.length / days.length);
+                for (let i = 0; i < subjectsPerDay && index < shuffled.length; i++) {
+                    schedule[day].push(shuffled[index++]);
+                }
+            });
+
+            saveToStorage();
+            renderSchedule();
+            showNotification('🔀 Đã xáo trộn lại lịch học!');
+        }
+
+        // Hiển thị lịch học
+        function renderSchedule() {
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+
+            let totalSubjects = 0;
+            let completedSubjects = 0;
+
+            days.forEach(day => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day-schedule';
+                dayDiv.innerHTML = `<div class="day-name">${day}</div>`;
+
+                const subjectsList = document.createElement('ul');
+                subjectsList.className = 'day-subjects';
+                subjectsList.draggable = false;
+                subjectsList.dataset.day = day;
+
+                // Thêm sự kiện dragover và drop cho container ngày
+                subjectsList.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    dayDiv.style.borderColor = '#667eea';
+                    dayDiv.style.borderWidth = '2px';
+                    dayDiv.style.borderStyle = 'dashed';
+                    dayDiv.style.backgroundColor = '#e7f3ff';
+                });
+
+                subjectsList.addEventListener('dragleave', (e) => {
+                    if (e.target === subjectsList) {
+                        dayDiv.style.borderColor = '#e9ecef';
+                        dayDiv.style.borderWidth = '2px';
+                        dayDiv.style.borderStyle = 'solid';
+                        dayDiv.style.backgroundColor = '#f8f9fa';
+                    }
+                });
+
+                subjectsList.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dayDiv.style.borderColor = '#e9ecef';
+                    dayDiv.style.borderWidth = '2px';
+                    dayDiv.style.borderStyle = 'solid';
+                    dayDiv.style.backgroundColor = '#f8f9fa';
+                    handleDropToDay(day);
+                });
+
+                if (schedule[day].length === 0) {
+                    subjectsList.innerHTML = '<div class="empty-message">Chưa có môn</div>';
+                } else {
+                    schedule[day].forEach((subject, index) => {
+                        totalSubjects++;
+                        const id = `${day}-${index}`;
+                        const isCompleted = completed[id] || false;
+
+                        if (isCompleted) completedSubjects++;
+
+                        const li = document.createElement('li');
+                        li.className = 'day-subject-item';
+                        li.draggable = true;
+                        li.dataset.subject = subject;
+                        li.dataset.day = day;
+                        li.dataset.index = index;
+
+                        li.innerHTML = `
+                            <input 
+                                type="checkbox" 
+                                class="checkbox-item" 
+                                ${isCompleted ? 'checked' : ''}
+                                onchange="toggleComplete('${id}')"
+                            >
+                            <span class="day-subject-name ${isCompleted ? 'completed' : ''}">${subject}</span>
+                            <button class="btn-remove-day" onclick="removeFromDay('${day}', ${index})">Xóa</button>
+                        `;
+
+                        li.addEventListener('dragstart', (e) => {
+                            draggedElement = { type: 'daySubject', day, index, data: subject };
+                            li.classList.add('dragging');
+                        });
+
+                        li.addEventListener('dragend', () => {
+                            li.classList.remove('dragging');
+                        });
+
+                        li.addEventListener('dragover', (e) => {
+                            e.preventDefault();
+                            li.classList.add('drag-over');
+                        });
+
+                        li.addEventListener('dragleave', () => {
+                            li.classList.remove('drag-over');
+                        });
+
+                        li.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            li.classList.remove('drag-over');
+                            handleDrop(day, index);
+                        });
+
+                        subjectsList.appendChild(li);
+                    });
+                }
+
+                dayDiv.appendChild(subjectsList);
+                container.appendChild(dayDiv);
+            });
+
+            document.getElementById('completedCount').textContent = completedSubjects;
+            document.getElementById('totalSchedule').textContent = totalSubjects;
+        }
+
+        // Xử lý drop
+        function handleDrop(targetDay, targetIndex) {
+            if (!draggedElement) return;
+
+            if (draggedElement.type === 'daySubject') {
+                const fromDay = draggedElement.day;
+                const fromIndex = draggedElement.index;
+
+                // Hoán đổi
+                const temp = schedule[fromDay][fromIndex];
+                schedule[fromDay][fromIndex] = schedule[targetDay][targetIndex];
+                schedule[targetDay][targetIndex] = temp;
+            }
+
+            draggedElement = null;
+            saveToStorage();
+            renderSchedule();
+        }
+
+        // Xử lý drop vào ngày
+        function handleDropToDay(targetDay) {
+            if (!draggedElement) return;
+
+            if (draggedElement.type === 'subject') {
+                // Thêm từ danh sách môn học vào ngày
+                if (!schedule[targetDay].includes(draggedElement.data)) {
+                    schedule[targetDay].push(draggedElement.data);
+                }
+                saveToStorage();
+                renderSchedule();
+            } else if (draggedElement.type === 'daySubject') {
+                const fromDay = draggedElement.day;
+                const fromIndex = draggedElement.index;
+
+                if (fromDay !== targetDay) {
+                    const subject = schedule[fromDay][fromIndex];
+                    schedule[fromDay].splice(fromIndex, 1);
+                    schedule[targetDay].push(subject);
+                    saveToStorage();
+                    renderSchedule();
+                }
+            }
+
+            draggedElement = null;
+        }
+
+        // Xóa khỏi ngày
+        function removeFromDay(day, index) {
+            schedule[day].splice(index, 1);
+            saveToStorage();
+            renderSchedule();
+        }
+
+        // Đánh dấu hoàn thành
+        function toggleComplete(id) {
+            completed[id] = !completed[id];
+            saveToStorage();
+            renderSchedule();
+        }
+
+        // Xử lý phím Enter
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addSubject();
+            }
+        }
+
+        // Xóa tất cả
+        function resetAll() {
+            if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu?')) {
+                subjects = [];
+                initSchedule();
+                completed = {};
+                saveToStorage();
+                renderSubjects();
+                renderSchedule();
+                showNotification('↺ Đã xóa tất cả dữ liệu!');
+            }
+        }
+
+        // Hiện thông báo
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Khởi tạo
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            renderSubjects();
+            renderSchedule();
+        });
+    </script>
+</body>
+</html>
